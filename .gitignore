@@ -16,3 +16,6 @@ Thumbs.db
 
 # Local config
 local.properties
+
+# Claude Code local agent state (transcripts, memory, settings)
+.claude/

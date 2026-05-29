@@ -16,11 +16,13 @@ val pageHtml: String = DocumentRenderer(ConnectFourView, layout).render(model)
 ```
 
 A Kotlin Multiplatform Connect Four built around a small **generic
-SSR engine**. Spring renders HTML on the JVM, the browser hydrates
-that same DOM via Compose HTML, and the same view function is the
-only renderer for either path. The shape is conventional: a Spring
-controller plus a server-rendered page. The value is in one
-decision the design refuses to bend on.
+SSR engine**. Spring renders the page on the JVM from a pure `View`
+function; with JavaScript on, a Compose HTML client clears `#root`
+and renders the board itself. The server view and the client are
+two separate renderers, kept aligned by shared class names and one
+state codec. The shape is conventional: a Spring controller plus a
+server-rendered page. The value is in one decision the design
+refuses to bend on.
 
 > **The invariant.** The server holds the canonical state of every
 > game in its repository, keyed by an opaque id. Moves are applied
@@ -29,7 +31,7 @@ decision the design refuses to bend on.
 > A no-JS player can tamper with form fields all day; they cannot
 > forge a board, fast-forward turns, or resurrect a finished game.
 
-![Connect Four rendered with JavaScript on (top) and off (bottom). Top: Compose HTML has hydrated and added the configuration panel. Bottom: plain SSR HTML where each column is a single button and clicks submit a form. Both produce the same canonical state in InMemoryGameRepository.](docs/board.jpg)
+![Connect Four rendered with JavaScript on (top) and off (bottom). Top: Compose HTML has taken over and added the configuration panel. Bottom: plain SSR HTML where each column is a single button and clicks submit a form. Both produce the same canonical state in InMemoryGameRepository.](docs/board.jpg)
 
 ## Highlights
 
@@ -140,9 +142,9 @@ stateDiagram-v2
 `DocumentRenderer<T>` writes the body inside `<div id="root"
 data-ssr="1">` next to a `<script type="application/x-connect4-state">`
 carrying the encoded state. The Compose HTML client decodes that
-script and mounts a Compose tree at `#root`. The codec is exercised on
-**both** targets, so the SSR payload provably decodes the same way in
-compiled JS as on the JVM.
+script, clears `#root`, and mounts a Compose tree there. The codec is
+exercised on **both** targets, so the SSR payload provably decodes the
+same way in compiled JS as on the JVM.
 
 ## The generic SSR engine
 

@@ -61,11 +61,13 @@ dependencies declared on `commonMain.dependencies`.
 does not depend on `jsMain`. The Compose HTML client lives
 entirely under `jsMain` and never runs on the JVM.
 
-`jsMain` consumes the same SSR codec as `jvmMain` for state
-hydration. Page rendering on the client is done by Compose HTML
-composables, not by `HtmlRenderer`. The two code paths agree on
-data attributes, class names, and DOM structure so the rendered
-HTML and the hydrated DOM are interchangeable.
+`jsMain` consumes the same `StateCodec` as `jvmMain` to read the
+embedded initial state. Page rendering on the client is a separate
+Compose HTML implementation (`App`, `BoardView`), not the
+`ConnectFourView` used for SSR. The two are kept visually aligned
+through shared class names and the codec, but they are distinct
+renderers that emit different markup: a `<form>` of submit buttons
+on the server, `onClick` `<div>`s in the client.
 
 ## Request flows
 
@@ -140,12 +142,14 @@ walks through the refactor that arrived at this design.
 
 ### Hydration
 
-The Compose HTML client mounts at `#root`. On mount, Compose
-builds its own tree under that element, replacing whatever the
-SSR controller emitted. From that point on the form is no longer
-in the DOM, and column clicks are handled by Compose's
-in-process state. The page URL still names the server-side game
-id, so a hard refresh returns to the server's view of the world.
+The Compose HTML client mounts at `#root`. Compose HTML has no
+hydration step of its own — it neither reuses nor removes the
+server-rendered DOM — so `Main.kt` clears `#root` before mounting
+and then renders the Compose tree into it. This replaces the no-JS
+`<form>` with the Compose board; from that point column clicks are
+handled by Compose's in-process state. The page URL still names the
+server-side game id, so a hard refresh returns to the server's view
+of the world.
 
 This split is intentional. The server is authoritative; the JS
 client is an interaction enhancement on top. Synchronizing

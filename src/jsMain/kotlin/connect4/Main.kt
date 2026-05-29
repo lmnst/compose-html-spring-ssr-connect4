@@ -23,6 +23,12 @@ fun main() {
         ?: ssrState
         ?: ConnectFourEngine.newGame(GameConfig.DEFAULT)
 
+    // Compose HTML has no hydration step: it appends its tree to #root
+    // without removing the server-rendered children. Clear the SSR fragment
+    // first so the no-JS <form> is replaced by the Compose tree instead of
+    // being left in the DOM as a duplicate beside it.
+    document.getElementById(ROOT_ELEMENT_ID)?.innerHTML = ""
+
     renderComposable(rootElementId = ROOT_ELEMENT_ID) {
         App(initial)
     }
